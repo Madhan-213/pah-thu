@@ -11,6 +11,7 @@ import { Timer } from '@/features/game/components/Timer';
 import { ScoreCard } from '@/features/game/components/ScoreCard';
 import { MoveHistory } from '@/features/game/components/MoveHistory';
 import { VictoryModal } from '@/features/game/components/VictoryModal';
+import { AIDebugPanel } from '@/features/game/components/AIDebugPanel';
 import { getStrategy } from '@/engine/strategies';
 import { calculatePlayerScore } from '@/engine/scoring';
 
@@ -478,6 +479,11 @@ export function GamePage() {
             </div>
           </div>
         </div>
+
+        {/* AI Debug Panel (appears during AI games) */}
+        {(config.mode === 'human-vs-ai' || config.mode === 'ai-vs-ai') && (
+          <AIDebugPanel />
+        )}
       </main>
 
       {/* ─── PAUSE OVERLAY ────────────────────────────── */}

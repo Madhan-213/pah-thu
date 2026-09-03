@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  Swords, Brain, Users, Trophy, Zap, Shield, Star, ChevronRight,
-  Play, BookOpen, Target, Clock, Award
+  Swords, Brain, Users, Trophy, Zap, Shield, Star,
+  Play, BookOpen, Target, Clock, Award, Cpu, Dices, Layers, Crosshair, Scale, Workflow,
+  FlaskConical, BarChart2, User, Bug, ChevronRight,
 } from 'lucide-react';
+import { AI_LEVEL_LABELS } from '@/types/game';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -18,11 +20,11 @@ const features = [
   { icon: <Swords size={28} />, title: 'Online Multiplayer', desc: 'Challenge players worldwide in real-time strategic battles.', color: '#c0392b' },
   { icon: <Brain size={28} />, title: 'AI Battle', desc: 'Face 7 unique AI opponents from Random to Monte Carlo.', color: '#2980b9' },
   { icon: <Trophy size={28} />, title: 'Tournaments', desc: 'Compete in elimination, round-robin, and Swiss formats.', color: '#d4af37' },
-  { icon: <Zap size={28} />, title: 'Time Controls', desc: 'Bullet, Blitz, Rapid, or Untimed — you choose the pace.', color: '#e67e22' },
-  { icon: <Shield size={28} />, title: 'Strategy Builder', desc: 'Craft and upload your own AI strategy module.', color: '#27ae60' },
+  { icon: <Zap size={28} />, title: 'Time Controls', desc: 'Bullet (15s, 30s), Blitz (3m, 5m), or Untimed per-move shot clock.', color: '#e67e22' },
+  { icon: <Shield size={28} />, title: 'Strategy Builder', desc: 'Craft and inspect AI evaluations with the built-in Debug Panel.', color: '#27ae60' },
   { icon: <Star size={28} />, title: 'Daily Challenges', desc: 'Complete unique puzzles every day and earn rewards.', color: '#8e44ad' },
   { icon: <Users size={28} />, title: 'Team Mode', desc: 'Form teams, battle clans, and climb the team rankings.', color: '#16a085' },
-  { icon: <Award size={28} />, title: 'Achievements', desc: 'Unlock badges and titles as you master the game.', color: '#d35400' },
+  { icon: <Award size={28} />, title: 'Game Analysis', desc: 'Step-by-step move analyzer, evaluation graphs & match history.', color: '#d35400' },
 ];
 
 const rules = [
@@ -32,18 +34,70 @@ const rules = [
   { icon: '🏆', title: 'Scoring System', desc: '3-in-a-row = 3pts · 4 = 10pts · 5 = 25pts · 6 = 56pts · 7 = 119pts' },
 ];
 
-const testimonials = [
-  { name: 'Arjun M.', country: '🇮🇳', rating: '⭐⭐⭐⭐⭐', text: 'Pah Tum is incredibly deep. The AI opponent on Minimax mode is no joke — took me weeks to beat it!' },
-  { name: 'Sophie L.', country: '🇫🇷', rating: '⭐⭐⭐⭐⭐', text: 'The most beautiful board game interface I\'ve ever played. Every animation is satisfying.' },
-  { name: 'Kenji T.', country: '🇯🇵', rating: '⭐⭐⭐⭐⭐', text: 'I love that the strategy goes all the way up to Monte Carlo. Pure skill, no luck.' },
-];
-
-const faqs = [
-  { q: 'Is Pah Tum free to play?', a: 'Yes! All core game modes are completely free. Play offline against AI or local two-player with no account needed.' },
-  { q: 'Can I play without an account?', a: 'Absolutely. Local games (Human vs Human, vs AI, AI vs AI) all work without signing in.' },
-  { q: 'What are the AI difficulty levels?', a: 'We offer 7 levels: Random, Greedy, Defensive, Aggressive, Balanced, Minimax, and Monte Carlo. Each has a distinct playstyle.' },
-  { q: 'What time controls are available?', a: 'Bullet (30s, 1min), Blitz (3min, 5min), Rapid (10min, 15min, 30min), and Untimed.' },
-  { q: 'Can I play on mobile?', a: 'Yes, the game is fully responsive and works on phones, tablets, and desktops.' },
+const aiStrategyDetails = [
+  {
+    name: 'Random AI',
+    icon: <Dices size={24} className="text-gray-500" />,
+    badge: 'Beginner',
+    badgeColor: 'bg-gray-100 text-gray-700 border-gray-300',
+    formula: 'Move = PickRandom(EmptyCells)',
+    desc: 'Generates all available empty cells on the 7×7 board and selects one at random without any evaluation. Ideal for warm-up games.',
+    color: '#95a5a6',
+  },
+  {
+    name: 'Greedy AI',
+    icon: <Zap size={24} className="text-emerald-500" />,
+    badge: 'Immediate Points',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+    formula: 'Score = Max(ImmediateGain)',
+    desc: 'Evaluates candidate moves based strictly on immediate point gains (+3, +10, +25, +56, +119). Ignores long-term planning or opponent threats.',
+    color: '#27ae60',
+  },
+  {
+    name: 'Defensive AI',
+    icon: <Shield size={24} className="text-blue-500" />,
+    badge: 'Counter-Blocker',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-300',
+    formula: 'Score = 70% OpponentThreatBlock + 30% OwnGain',
+    desc: 'Scans for opponent line completions on their next turn. If the opponent can score, it blocks them immediately before advancing its own attack.',
+    color: '#2980b9',
+  },
+  {
+    name: 'Aggressive AI',
+    icon: <Crosshair size={24} className="text-red-500" />,
+    badge: 'Chain Builder',
+    badgeColor: 'bg-red-50 text-red-700 border-red-300',
+    formula: 'Score = 75% LongChainPotential + 25% Gain',
+    desc: 'Heavily weights extending line chains into 5, 6, and 7-in-a-row continuous lines. Prioritizes building massive high-value scoring lines.',
+    color: '#e74c3c',
+  },
+  {
+    name: 'Balanced AI',
+    icon: <Scale size={24} className="text-purple-500" />,
+    badge: 'Harmonious Strategy',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-300',
+    formula: '45% Attack + 45% Defense + 10% Center',
+    desc: 'Maintains a 45% attack, 45% defense, and 10% center grid control balance. Adapts automatically as the game transitions into endgame.',
+    color: '#8e44ad',
+  },
+  {
+    name: 'Minimax AI',
+    icon: <Cpu size={24} className="text-orange-500" />,
+    badge: 'Alpha-Beta Lookahead',
+    badgeColor: 'bg-orange-50 text-orange-700 border-orange-300',
+    formula: 'Depth 3-5 Tree Search + Alpha-Beta Pruning',
+    desc: 'Evaluates lookahead decision trees up to 5 moves deep. Uses Alpha-Beta pruning, candidate move ordering, and node score memoization.',
+    color: '#e67e22',
+  },
+  {
+    name: 'Monte Carlo AI',
+    icon: <Workflow size={24} className="text-yellow-600" />,
+    badge: 'MCTS Simulation',
+    badgeColor: 'bg-yellow-50 text-yellow-700 border-yellow-300',
+    formula: '50-80 Match Rollouts → Win Probability %',
+    desc: 'Runs dozens of complete game simulations for candidate moves, calculates statistical win probabilities, and chooses the move with max win rate.',
+    color: '#d4af37',
+  },
 ];
 
 export function LandingPage() {
@@ -63,8 +117,8 @@ export function LandingPage() {
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
-            {['How to Play', 'Features', 'FAQ'].map(item => (
+          <div className="hidden md:flex items-center gap-6">
+            {['How to Play', 'Features', 'AI Strategies'].map(item => (
               <a
                 key={item}
                 href={`#${item.toLowerCase().replace(/ /g, '-')}`}
@@ -73,6 +127,12 @@ export function LandingPage() {
                 {item}
               </a>
             ))}
+            <button onClick={() => navigate('/playground')} className="text-sm font-medium text-[#7d5230] hover:text-[#5a3a1f] transition-colors">
+              🧪 Playground
+            </button>
+            <button onClick={() => navigate('/stats')} className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">
+              📊 Stats
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -94,7 +154,6 @@ export function LandingPage() {
 
       {/* ─── HERO ────────────────────────────────── */}
       <section className="relative overflow-hidden pt-20 pb-32 px-6">
-        {/* Floating decorative pieces */}
         <FloatingPieces />
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
@@ -169,7 +228,7 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { value: '7', label: 'AI Strategies' },
-            { value: '8', label: 'Game Modes' },
+            { value: '4', label: 'Game Modes' },
             { value: '7×7', label: 'Board Size' },
             { value: '119', label: 'Max Line Score' },
           ].map((stat, i) => (
@@ -232,6 +291,70 @@ export function LandingPage() {
                 <h3 className="text-lg font-bold text-stone-800 mb-2">{f.title}</h3>
                 <p className="text-sm text-stone-500 leading-relaxed">{f.desc}</p>
               </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PROFESSIONAL FEATURE HUB ────────────── */}
+      <section className="py-24 px-6" style={{ background: 'rgba(125,82,48,0.04)', borderTop: '1px solid #e8ddd0', borderBottom: '1px solid #e8ddd0' }}>
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            custom={0}
+            className="text-center mb-14"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7d5230]/10 border border-[#d4b896] text-sm font-bold text-[#7d5230] mb-5">
+              🎓 Professional Suite
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-stone-800 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Your Strategy Research Platform
+            </h2>
+            <p className="text-lg text-stone-500 max-w-2xl mx-auto">
+              A complete professional suite for AI research, replay analysis, tournament management, player tracking, and performance analytics.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              { icon: <FlaskConical size={26} />, title: 'Strategy Playground', desc: 'Develop, debug & test custom AI strategies in a live interactive environment.', route: '/playground', color: '#7d5230', emoji: '🧪' },
+              { icon: <Bug size={26} />, title: 'Strategy Debugger', desc: 'Inspect AI decision trees, candidate moves, and execution traces in real-time.', route: '/debugger', color: '#e67e22', emoji: '🐛' },
+              { icon: <Swords size={26} />, title: 'Strategy Comparison', desc: 'Run head-to-head strategy simulations with heatmaps and radar charts.', route: '/comparison', color: '#e74c3c', emoji: '⚔️' },
+              { icon: <Play size={26} />, title: 'Match Replay Center', desc: 'Replay any game move-by-move with full board state history and comments.', route: '/replay', color: '#2980b9', emoji: '▶️' },
+              { icon: <Trophy size={26} />, title: 'Tournament History', desc: 'Browse all tournaments with match results, brackets, and champion podiums.', route: '/tournaments', color: '#d4af37', emoji: '🏆' },
+              { icon: <User size={26} />, title: 'Player Profiles', desc: 'Create profiles, track ratings, achievements, and your favorite strategies.', route: '/profiles', color: '#27ae60', emoji: '👤' },
+              { icon: <Award size={26} />, title: 'Achievement System', desc: '20 achievements across wins, strategy, performance, and tournament categories.', route: '/achievements', color: '#8e44ad', emoji: '🏅' },
+              { icon: <BarChart2 size={26} />, title: 'Stats Dashboard', desc: 'Full performance analytics with charts, win rates, and streak tracking.', route: '/stats', color: '#16a085', emoji: '📊' },
+            ].map((item, i) => (
+              <motion.button
+                key={item.title}
+                onClick={() => navigate(item.route)}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                className="card p-6 group text-left w-full"
+              >
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300"
+                  style={{ background: `${item.color}15`, color: item.color }}
+                >
+                  {item.icon}
+                </div>
+                <h3 className="text-base font-bold text-stone-800 mb-2 flex items-center gap-2">
+                  {item.emoji} {item.title}
+                </h3>
+                <p className="text-sm text-stone-500 leading-relaxed mb-3">{item.desc}</p>
+                <div className="flex items-center gap-1 text-xs font-bold" style={{ color: item.color }}>
+                  Open <ChevronRight size={12} />
+                </div>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -304,8 +427,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ─── TESTIMONIALS ────────────────────────── */}
-      <section className="py-24 px-6">
+      {/* ─── AI STRATEGIES & HOW THEY WORK ───────── */}
+      <section id="ai-strategies" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -315,72 +438,51 @@ export function LandingPage() {
             custom={0}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-stone-800 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-              What Players Say
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-stone-600 mb-4">
+              <Brain size={14} className="text-[#7d5230]" />
+              ENGINE ARCHITECTURE
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-stone-800 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+              7 AI Strategies — How They Work
             </h2>
+            <p className="text-lg text-stone-500 max-w-2xl mx-auto">
+              Every AI level uses a distinct evaluation pipeline — from direct point rushing to Alpha-Beta Minimax tree search and Monte Carlo simulation.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {aiStrategyDetails.map((strat, i) => (
               <motion.div
-                key={t.name}
+                key={strat.name}
                 custom={i}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
                 whileHover={{ y: -6 }}
-                className="card p-8"
+                className="card p-7 flex flex-col justify-between"
               >
-                <div className="text-lg mb-4">{t.rating}</div>
-                <p className="text-stone-600 leading-relaxed mb-6 italic">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full wood-border flex items-center justify-center text-white font-bold text-sm">
-                    {t.name.charAt(0)}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                      style={{ background: `${strat.color}15` }}
+                    >
+                      {strat.icon}
+                    </div>
+                    <span className={`text-[11px] font-extrabold px-3 py-1 rounded-full border ${strat.badgeColor}`}>
+                      {strat.badge}
+                    </span>
                   </div>
-                  <div>
-                    <div className="font-semibold text-stone-800 text-sm">{t.name}</div>
-                    <div className="text-sm">{t.country}</div>
-                  </div>
+
+                  <h3 className="text-xl font-bold text-stone-800 mb-2">{strat.name}</h3>
+                  <p className="text-stone-500 text-sm leading-relaxed mb-6">{strat.desc}</p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ─── FAQ ─────────────────────────────────── */}
-      <section id="faq" className="py-24 px-6" style={{ background: 'rgba(255,255,255,0.5)' }}>
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-stone-800 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Frequently Asked
-            </h2>
-          </motion.div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, i) => (
-              <motion.div
-                key={faq.q}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                className="card p-7"
-              >
-                <div className="flex items-start gap-4">
-                  <ChevronRight size={18} className="text-[#7d5230] shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-stone-800 mb-2">{faq.q}</h3>
-                    <p className="text-stone-500 leading-relaxed text-sm">{faq.a}</p>
+                <div className="pt-4 border-t border-stone-100">
+                  <div className="text-[10px] uppercase font-bold text-stone-400 mb-1">Decision Formula</div>
+                  <div className="text-xs font-mono font-semibold text-stone-700 bg-stone-50 p-2.5 rounded-xl border border-stone-200/60 truncate">
+                    {strat.formula}
                   </div>
                 </div>
               </motion.div>
@@ -390,7 +492,7 @@ export function LandingPage() {
       </section>
 
       {/* ─── CTA ─────────────────────────────────── */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6" style={{ background: 'rgba(255,255,255,0.5)' }}>
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial="hidden"
@@ -402,10 +504,10 @@ export function LandingPage() {
           >
             <div className="text-5xl mb-6">♟️</div>
             <h2 className="text-4xl font-bold text-stone-800 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Ready to Play?
+              Ready to Challenge the AI?
             </h2>
             <p className="text-stone-500 mb-8 text-lg">
-              No account required. Jump in and start your first game in seconds.
+              No account required. Jump in and test your skills against any of the 7 AI strategies.
             </p>
             <button
               onClick={() => navigate('/game')}
@@ -431,7 +533,7 @@ export function LandingPage() {
             © 2026 Pah Tum. A premium strategy board game.
           </div>
           <div className="flex gap-6">
-            {['Features', 'How to Play', 'FAQ'].map(link => (
+            {['Features', 'How to Play', 'AI Strategies'].map(link => (
               <a key={link} href={`#${link.toLowerCase().replace(/ /g, '-')}`} className="text-sm text-stone-400 hover:text-stone-700 transition-colors">
                 {link}
               </a>
